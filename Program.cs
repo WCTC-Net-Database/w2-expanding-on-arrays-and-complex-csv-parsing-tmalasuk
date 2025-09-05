@@ -1,182 +1,72 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using CsvHelper;
+using CsvHelper.Configuration;
+using System.Globalization;
+using CsvHelper.TypeConversion;
 
-class Program
+
+namespace My_Awesome_Program
 {
-    static string[] lines;
-
-    static void Main()
+    internal class Program
     {
-        
-        string filePath = "input.csv";
-        lines = File.ReadAllLines(filePath);
-      
-
-        while (true)
+        static void Main(string[] args)
         {
-            Console.WriteLine("Menu:");
-            Console.WriteLine("1. Display Characters");
-            Console.WriteLine("2. Add Character");
-            Console.WriteLine("3. Level Up Character");
-            Console.WriteLine("4. Exit");
-            Console.Write("Enter your choice: ");
-            string choice = Console.ReadLine();
+            var charManager = new CharacterManager();
+            var dataManager = new DataManager();
 
-            switch (choice)
+            //returns an initial list of Character objects from the input.csv file
+            //var masterList = dataManager.InitializeCharList();
+            var arrayOfCharacters = dataManager.InitializeArray(); //used to satisfy homework requirement
+            Console.WriteLine($"Welcome! {arrayOfCharacters.Length -1} characters have been loaded from save file.");
+
+            
+
+            var exit = false;
+            while (!exit)
             {
-                case "1":
-                    DisplayAllCharacters(lines);
-                    break;
-                case "2":
-                    AddCharacter(ref lines);
-                    break;
-                case "3":
-                    LevelUpCharacter(lines);
-                    break;
-                case "4":
-                    File.WriteAllLines(filePath, lines);
-                    return;
-                default:
-                    Console.WriteLine("Invalid choice. Please try again.");
-                    break;
-            }
-        }
-    }
+                Console.WriteLine("1. Display Characters\n2. Add Character\n3. Level Up Character\n4. Find Character\n5. Exit");
+                Console.Write("> ");
+                var userInput = Console.ReadLine()?.Trim();
 
-    static void DisplayAllCharacters(string[] lines)
-    {
-        // Skip the header row
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string line = lines[i];
-
-            string name;
-            int commaIndex;
-
-            // Check if the name is quoted
-            if (line.StartsWith("\""))
-            {
-                commaIndex = line.IndexOf("\",");
-                name = line.Substring(1, commaIndex - 1);
-                line = line.Substring(commaIndex + 2);
-
-            }
-            else
-            {
-                commaIndex = line.IndexOf(',');
-                name = line.Substring(0, commaIndex);
-                line = line.Substring(commaIndex + 1);
-            }
-
-            var columns = line.Split(",");
-
-            string characterClass = columns[0];
-            int level = int.Parse(columns[1]);
-            int hitPoints = int.Parse(columns[2]);
-            string[] equipment = columns[3].Split("|");
-
-            // Display character information
-            Console.WriteLine($"------------------\nName: {name}\nClass: {characterClass}\nLevel: {level}\nHP: {hitPoints}\nEquipment: {string.Join(", ", equipment)}\n------------------");
-        }
-    }
-
-    static void AddCharacter(ref string[] lines)
-    {
-        
-        // Prompt for character details
-        Console.Write("Enter character name: ");
-        string? name = Console.ReadLine();
-
-        Console.Write("Enter character class: ");
-        string? characterClass = Console.ReadLine();
-
-        Console.Write("Enter level: ");
-        int level = int.Parse(Console.ReadLine());
-
-        Console.Write("Enter hit points: ");
-        int hitPoints = int.Parse(Console.ReadLine());
-
-        Console.WriteLine("Enter equipment (one item per line, press Enter on an empty line to finish):");
-        var equipmentList = new List<string>();
-        while (true)
-        {
-            string equipmentItem = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(equipmentItem))
-            {
-                break;
-            }
-            equipmentList.Add(equipmentItem);
-        }
-        string equipment = string.Join("|", equipmentList);
-
-        // Enclose the name in quotes if it contains a comma
-        if (name.Contains(','))
-        {
-            name = $"\"{name}\"";
-        }
-
-        string newCharacterLine = $"{name},{characterClass},{level},{hitPoints},{equipment}";
-
-        // Append the new character to the lines array
-        // Increase the size of the array by 1
-        Array.Resize(ref lines, lines.Length + 1);
-
-        // Add the new element to the last position
-        lines[lines.Length - 1] = newCharacterLine;
-
-        Console.WriteLine("Character added successfully!");
-    }
-
-    static void LevelUpCharacter(string[] lines)
-    {
-        Console.Write("Enter the name of the character to level up: ");
-        string nameToLevelUp = Console.ReadLine();
-
-        // Loop through characters to find the one to level up
-        for (int i = 1; i < lines.Length; i++)
-        {
-            string line = lines[i];
-
-            if (line.Contains(nameToLevelUp))
-            {
-
-                // TODO: Split the rest of the fields locating the level field
-                string name;
-                int commaIndex;
-
-                // Check if the name is quoted
-                if (line.StartsWith("\""))
+                switch (userInput)
                 {
-                    commaIndex = line.IndexOf("\",");
-                    name = line.Substring(0, commaIndex);
-                    line = line.Substring(commaIndex + 2);
+                    case "1":
+                        //charManager.DisplayCharacters(masterList);
+                        charManager.DisplayCharacterUsingArray(arrayOfCharacters); //used to satisfy homework requirement
+                        break;
 
+                    case "2":
+                        //charManager.AddCharacter(masterList);
+                        charManager.AddCharacterUsingArray(ref arrayOfCharacters); //used to satisfy homework requirement
+                        break;
+
+                    case "3":
+                        //charManager.LevelUpCharacter(masterList);
+                        charManager.LevelUpCharacterUsingArray(ref arrayOfCharacters); //used to satisfy homework requirement
+                        break;
+                    case "4":
+                        charManager.FindCharacter(); //not implemented yet
+                        break;
+                    case "5":
+                        //this version will only write to file when exiting
+                        //dataManager.RewriteFile(masterList);
+                        dataManager.RewriteFileUsingArray(arrayOfCharacters); //used to satisfy homework requirement
+                        exit = true;
+                        break;
+
+                    default:
+                        Console.WriteLine("Invalid input");
+                        break;
                 }
-                else
-                {
-                    commaIndex = line.IndexOf(',');
-                    name = line.Substring(0, commaIndex);
-                    line = line.Substring(commaIndex + 1);
-                }
-
-                var columns = line.Split(",");
-
-                string characterClass = columns[0];
-                int level = int.Parse(columns[1]);
-                int hitPoints = int.Parse(columns[2]);
-                string equipment = columns[3];
-
-
-                // TODO: Level up the character
-                level++;
-                Console.WriteLine($"Character {name} leveled up to level {level}!");
-
-                // TODO: Update the line with the new level
-                lines[i] = $"{name},{characterClass},{level},{hitPoints},{equipment}";
-                break;
             }
+
         }
+
     }
 
 }
+
+
+
+
+
+

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 class Program
@@ -7,8 +8,10 @@ class Program
 
     static void Main()
     {
+        
         string filePath = "input.csv";
         lines = File.ReadAllLines(filePath);
+      
 
         while (true)
         {
@@ -32,6 +35,7 @@ class Program
                     LevelUpCharacter(lines);
                     break;
                 case "4":
+                    File.WriteAllLines(filePath, lines);
                     return;
                 default:
                     Console.WriteLine("Invalid choice. Please try again.");
@@ -53,35 +57,75 @@ class Program
             // Check if the name is quoted
             if (line.StartsWith("\""))
             {
-                // TODO: Find the closing quote and the comma right after it
-                // TODO: Remove quotes from the name if present and parse the name
-                // name = ...
+                commaIndex = line.IndexOf("\",");
+                name = line.Substring(1, commaIndex - 1);
+                line = line.Substring(commaIndex + 2);
+
             }
             else
             {
-                // TODO: Name is not quoted, so store the name up to the first comma
-                // name =
+                commaIndex = line.IndexOf(',');
+                name = line.Substring(0, commaIndex);
+                line = line.Substring(commaIndex + 1);
             }
 
-            // TODO: Parse characterClass, level, hitPoints, and equipment
-            // string characterClass = ...
-            // int level = ...
-            // int hitPoints = ...
+            var columns = line.Split(",");
 
-            // TODO: Parse equipment noting that it contains multiple items separated by '|'
-            // string[] equipment = ...
+            string characterClass = columns[0];
+            int level = int.Parse(columns[1]);
+            int hitPoints = int.Parse(columns[2]);
+            string[] equipment = columns[3].Split("|");
 
             // Display character information
-            // Console.WriteLine($"Name: {name}, Class: {characterClass}, Level: {level}, HP: {hitPoints}, Equipment: {string.Join(", ", equipment)}");
+            Console.WriteLine($"------------------\nName: {name}\nClass: {characterClass}\nLevel: {level}\nHP: {hitPoints}\nEquipment: {string.Join(", ", equipment)}\n------------------");
         }
     }
 
     static void AddCharacter(ref string[] lines)
     {
-        // TODO: Implement logic to add a new character
-        // Prompt for character details (name, class, level, hit points, equipment)
-        // DO NOT just ask the user to enter a new line of CSV data or enter the pipe-separated equipment string
+        
+        // Prompt for character details
+        Console.Write("Enter character name: ");
+        string? name = Console.ReadLine();
+
+        Console.Write("Enter character class: ");
+        string? characterClass = Console.ReadLine();
+
+        Console.Write("Enter level: ");
+        int level = int.Parse(Console.ReadLine());
+
+        Console.Write("Enter hit points: ");
+        int hitPoints = int.Parse(Console.ReadLine());
+
+        Console.WriteLine("Enter equipment (one item per line, press Enter on an empty line to finish):");
+        var equipmentList = new List<string>();
+        while (true)
+        {
+            string equipmentItem = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(equipmentItem))
+            {
+                break;
+            }
+            equipmentList.Add(equipmentItem);
+        }
+        string equipment = string.Join("|", equipmentList);
+
+        // Enclose the name in quotes if it contains a comma
+        if (name.Contains(','))
+        {
+            name = $"\"{name}\"";
+        }
+
+        string newCharacterLine = $"{name},{characterClass},{level},{hitPoints},{equipment}";
+
         // Append the new character to the lines array
+        // Increase the size of the array by 1
+        Array.Resize(ref lines, lines.Length + 1);
+
+        // Add the new element to the last position
+        lines[lines.Length - 1] = newCharacterLine;
+
+        Console.WriteLine("Character added successfully!");
     }
 
     static void LevelUpCharacter(string[] lines)
@@ -94,23 +138,45 @@ class Program
         {
             string line = lines[i];
 
-            // TODO: Check if the name matches the one to level up
-            // Do not worry about case sensitivity at this point
             if (line.Contains(nameToLevelUp))
             {
 
                 // TODO: Split the rest of the fields locating the level field
-                // string[] fields = ...
-                // int level = ...
+                string name;
+                int commaIndex;
+
+                // Check if the name is quoted
+                if (line.StartsWith("\""))
+                {
+                    commaIndex = line.IndexOf("\",");
+                    name = line.Substring(0, commaIndex);
+                    line = line.Substring(commaIndex + 2);
+
+                }
+                else
+                {
+                    commaIndex = line.IndexOf(',');
+                    name = line.Substring(0, commaIndex);
+                    line = line.Substring(commaIndex + 1);
+                }
+
+                var columns = line.Split(",");
+
+                string characterClass = columns[0];
+                int level = int.Parse(columns[1]);
+                int hitPoints = int.Parse(columns[2]);
+                string equipment = columns[3];
+
 
                 // TODO: Level up the character
-                // level++;
-                // Console.WriteLine($"Character {name} leveled up to level {level}!");
+                level++;
+                Console.WriteLine($"Character {name} leveled up to level {level}!");
 
                 // TODO: Update the line with the new level
-                // lines[i] = ...
+                lines[i] = $"{name},{characterClass},{level},{hitPoints},{equipment}";
                 break;
             }
         }
     }
+
 }
